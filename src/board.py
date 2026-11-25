@@ -51,3 +51,45 @@ class Board:
                             mine_neighbors += 1
 
                 self.grid[r][c].neighbor_mines = mine_neighbors
+
+    def reveal_cell(self, row: int, col: int):  #Funkcja odkrywajaca pole
+        if not self.is_inside(row, col) or self.game_over or self.victory:
+            return
+
+        cell = self.grid[row][col]
+
+        #Sprawdzamy czy pole nie jest juz odkryte lub oflagowane
+        if cell.is_revealed or cell.is_flagged:
+            return
+
+        cell.reveal()
+
+        #Trafienie w mine to przegrana
+        if cell.is_mine:
+            self.game_over = True
+            return
+
+        #Jesli pole nie ma zadnej miny obok, odslaniamy sasiednie pola
+        if cell.neighbor_mines == 0:
+            for dr in (-1, 0, 1):
+                for dc in (-1, 0, 1):
+                    if dr == 0 and dc == 0:
+                        continue
+                    self.reveal_cell(row + dr, col + dc)
+
+        self._check_victory()
+
+    def toggle_flag(self, row: int, col: int):   #Stawia lub zdejmuje flage na wybranym polu
+        if not self.is_inside(row, col) or self.game_over or self.victory:
+            return
+
+        self.grid[row][col].toggle_flag()
+
+    def _check_victory(self):   #Sprawdza czy wszystkie pola nie bedace minami zostaly odkryte
+        for r in range(self.rows):
+            for c in range(self.cols):
+                cell = self.grid[r][c]
+                if not cell.is_mine and not cell.is_revealed:
+                    return
+
+        self.victory = True
